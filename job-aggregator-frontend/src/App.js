@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import './App.css';
 
 function App() {
     // State variables
@@ -8,6 +9,7 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [message, setMessage] = useState("");
+    const [activeSource, setActiveSource] = useState("all");
 
     // When component is created, run fetchJobs()
     useEffect(() => {
@@ -51,6 +53,7 @@ function App() {
     const handleSearch = (event) => {
         event.preventDefault();
         fetchJobs(query, location);
+        setActiveSource("all");
     };
 
     // Test the scraper
@@ -68,6 +71,7 @@ function App() {
             const data = await response.json();
             setJobs(data);
             setMessage(`${site} scraper test completed. Found ${data.length} jobs.`);
+            setActiveSource(site.toLowerCase());
         } catch (err) {
             setError(`Error testing ${site} scraper: ` + err.message);
             console.error(`Error testing ${site} scraper:`, err);
@@ -76,60 +80,95 @@ function App() {
         }
     };
 
+    // Filterjobs based on source
+    const displayedJobs = activeSource === "all"
+        ? jobs
+        : jobs.filter(job => job.company.toLowerCase().includes(activeSource));
+
     return (
         <div className="App">
-            <header>
+            <header className="app-header">
                 <h1>Job Search Aggregator</h1>
+                <p>Find the perfect job from multiple sources</p>
             </header>
 
-            <div style={{ margin: '20px 0', padding: '10px', backgroundColor: '#f0f0f0' }}>
-                <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <input
-                        type="text"
-                        placeholder="Job title, keywords, or company"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        style={{ padding: '8px', flex: '1' }}
-                    />
+            <div className="search-container">
+                <form onSubmit={handleSearch} className="search-form">
+                    <div className="input-group">
+                        <label htmlFor="query">Job Title, Keywords, or Company</label>
+                        <input
+                            id="query"
+                            type="text"
+                            placeholder="e.g. JavaScript Developer, Data Analyst"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
+                    </div>
 
-                    <input
-                        type="text"
-                        placeholder="City, state, or remote"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        style={{ padding: '8px', flex: '1' }}
-                    />
+                    <div className="input-group">
+                        <label htmlFor="location">Location</label>
+                        <input
+                            id="location"
+                            type="text"
+                            placeholder="e.g. Remote, New York, London"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                        />
+                    </div>
 
-                    <button type="submit" style={{ padding: '8px 16px', backgroundColor: '#0056b3', color: 'white', border: 'none' }}>
+                    <button type="submit" className="search-button">
                         Search Jobs
                     </button>
                 </form>
 
-                <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
-                    <button onClick={() => testScraper('Indeed')} style={{ padding: '6px 12px' }}>Test Indeed Scraper</button>
-                    <button onClick={() => testScraper('LinkedIn')} style={{ padding: '6px 12px' }}>Test LinkedIn Scraper</button>
+                <div className="source-filters">
+                    <button
+                        className={`source-button ${activeSource === "all" ? "active" : ""}`}
+                        onClick={() => setActiveSource("all")}>
+                        All Sources
+                    </button>
+                    <button
+                        className={`source-button ${activeSource === "indeed" ? "active" : ""}`}
+                        onClick={() => testScraper('Indeed')}>
+                        Indeed
+                    </button>
+                    <button
+                        className={`source-button ${activeSource === "linkedin" ? "active" : ""}`}
+                        onClick={() => testScraper('LinkedIn')}>
+                        LinkedIn
+                    </button>
                 </div>
             </div>
 
-            {loading && <div style={{ textAlign: 'center', padding: '20px' }}>Loading...</div>}
-            {message && <div style={{ textAlign: 'center', padding: '10px' }}>{message}</div>}
-            {error && <div style={{ textAlign: 'center', padding: '10px', color: 'red' }}>{error}</div>}
+            {loading && <div className="status loading">Loading jobs...</div>}
+            {message && !loading && <div className="status message">{message}</div>}
+            {error && <div className="status error">{error}</div>}
 
-            <main>
-                <ul style={{ padding: '0', listStyle: 'none' }}>
-                    {jobs.map((job) => (
-                        <li key={job.id} style={{ marginBottom: '1rem', borderBottom: '1px solid #ccc', paddingBottom: '1rem' }}>
-                            <h2>{job.title}</h2>
-                            <p><strong>Company:</strong> {job.company}</p>
-                            <p><strong>Location:</strong> {job.location}</p>
-                            <p>{job.description}</p>
-                            <a href={job.url} target="_blank" rel="noopener noreferrer" style={{ color: '#0056b3' }}>
-                                View Job
-                            </a>
-                        </li>
-                    ))}
-                </ul>
+            <main className="jobs-container">
+                {displayedJobs.length === 0 && !loading ? (
+                    <div className="no-jobs">No jobs found. Try a different search.</div>
+                ) : (
+                    <ul className="jobs-list">
+                        {displayedJobs.map((job, index) => (
+                            <li key={job.id || index} className="job-card">
+                                <h2 className="job-title">{job.title}</h2>
+                                <div className="job-meta">
+                                    <span className="job-company">{job.company}</span>
+                                    <span className="job-location">{job.location}</span>
+                                </div>
+                                <p className="job-description">{job.description}</p>
+                                <a href={job.url} target="_blank" rel="noopener noreferrer" className="view-job-button">
+                                    View Job
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </main>
+
+            <footer className="app-footer">
+                <p>© {new Date().getFullYear()} Job Aggregator - Search across multiple job sites</p>
+            </footer>
         </div>
     );
 }
