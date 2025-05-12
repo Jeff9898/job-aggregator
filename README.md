@@ -14,6 +14,9 @@ A full-stack web application that scrapes job postings from multiple platforms a
 - ✅ Simple UI for browsing and filtering results
 
 ---
+<img width="1279" alt="image" src="https://github.com/user-attachments/assets/6ee565f4-2026-473c-80ac-2de624a58207" />
+
+---
 
 ## 🛠 Technologies Used
 
